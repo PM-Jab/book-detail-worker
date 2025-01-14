@@ -1,18 +1,29 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import bookMetadataHandler from './handler/bookMetadataHandler';
+
+const corsHeaders = {
+	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, PUT, DELETE',
+	'Access-Control-Allow-Headers': 'X-Custom-Auth-Key, Range',
+};
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+		const url = new URL(request.url);
+		console.log('request', url);
+		console.log('params', url.searchParams);
+		const bookProfileMetadata = bookMetadataHandler(request, env, ctx);
+
+		const headers = new Headers();
+		headers.set('Content-Type', 'application/json');
+
+		headers.set('Access-Control-Allow-Origin', '*');
+		headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+
+		console.log('bookProfileMetadata: ', bookProfileMetadata);
+
+		return new Response(JSON.stringify(bookProfileMetadata), {
+			status: 200,
+			headers: corsHeaders,
+		});
 	},
 } satisfies ExportedHandler<Env>;
